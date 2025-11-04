@@ -2,148 +2,209 @@
 #include <stdlib.h>
 #include <time.h>
 
-FILE* input_file;
-FILE* output_file;
+FILE *input_file;
+FILE *output_file;
 
 typedef struct {
-  char* method[3];
+  char *method;
   int count;
-}PartitionMethod;
+} PartitionMethod;
 
-void printVec(int* vector, int size){
-  for(int i = 0; i < size;i++ ){
-    if(i+1<size){
-      printf("%d, ",vector[i]);
-    }else{
-      printf("%d\n",vector[i]);
+void printVec(int *vector, int size) {
+  for (int i = 0; i < size; i++) {
+    if (i + 1 < size) {
+      printf("%d, ", vector[i]);
+    } else {
+      printf("%d\n", vector[i]);
     }
   }
 }
 
-int lomuto_default(int* vector, int begin, int end) {
-    int pivot = vector[end];
-    int x = begin - 1;
-    int swap = 0;
+int lomuto_default(int *vector, int begin, int end) {
+  int pivot = vector[end];
+  int x = begin - 1;
+  int swap = 0;
 
-    for (int y = begin; y < end; y++) {
-        if (vector[y] <= pivot) {
-            x++;
-            swap = vector[x];
-            vector[x] = vector[y];
-            vector[y] = swap;
-        }
+  for (int y = begin; y < end; y++) {
+    if (vector[y] <= pivot) {
+      x++;
+      swap = vector[x];
+      vector[x] = vector[y];
+      vector[y] = swap;
     }
+  }
 
-    swap = vector[x + 1];
-    vector[x + 1] = vector[end];
-    vector[end] = swap;
+  swap = vector[x + 1];
+  vector[x + 1] = vector[end];
+  vector[end] = swap;
 
-    return x ;
+  return x;
 }
 
-int lomuto_median(int* vector, int begin, int end, int median){
-    if (begin == end){
+int lomuto_median(int *vector, int begin, int end, int median) {
+  if (begin == end) {
     return begin;
-  }else{
+  } else {
     int pivot = lomuto_default(vector, begin, end);
-    if(pivot - begin + 1 >= median) {
-      return lomuto_median(vector,begin, pivot,median);
-    }
-    else{
-      return lomuto_median(vector, pivot+1, end, median - (pivot - begin + 1));
+    if (pivot - begin + 1 >= median) {
+      return lomuto_median(vector, begin, pivot, median);
+    } else {
+      return lomuto_median(vector, pivot + 1, end,
+                           median - (pivot - begin + 1));
     }
   }
- 
 }
 
-int lomuto_rand(int* vector, int begin, int end){
-  int swap = vector[end], r_index = begin + rand()%(end - begin +1);
+int lomuto_rand(int *vector, int begin, int end) {
+  int swap = vector[end], r_index = begin + rand() % (end - begin + 1);
   vector[end] = vector[r_index];
   vector[r_index] = swap;
-  return lomuto_default(vector, begin,  end);
+  return lomuto_default(vector, begin, end);
 }
 
-
-
-int hoare_default(int* vector, int begin, int end){
+int hoare_default(int *vector, int begin, int end,
+                  PartitionMethod *partitionsMethods) {
+  partitionsMethods->count++;
   int pivot = vector[begin], x = begin - 1, y = end + 1, swap = 0;
   while (1) {
     while (vector[--y] > pivot) {
     }
     while (vector[++x] < pivot) {
     }
-    if(x<y){
+    if (x < y) {
       swap = vector[x];
       vector[x] = vector[y];
       vector[y] = swap;
-    }else{
+    } else {
       return y;
     }
   }
 }
 
-int hoare_rand(int* vector, int begin, int end){
-  int swap = vector[begin], r_index = begin + rand()%(end - begin +1);
+int hoare_rand(int *vector, int begin, int end,
+               PartitionMethod *partitionsMethods) {
+  int swap = vector[begin], r_index = begin + rand() % (end - begin + 1);
   vector[begin] = vector[r_index];
   vector[r_index] = swap;
-  return hoare_default(vector,begin, end);
+  return hoare_default(vector, begin, end, partitionsMethods);
+}
+void quick_sort_hoare_rand(int *vector, int begin, int end,
+                           PartitionMethod *partitionsMethods) {
+  if (begin < end) {
+    int pivot = hoare_rand(vector, begin, end, partitionsMethods);
+    quick_sort_hoare_rand(vector, begin, pivot, partitionsMethods);
+    quick_sort_hoare_rand(vector, pivot + 1, end, partitionsMethods);
+  }
 }
 
-int hoare_median(int* vector, int begin, int end, int median){
-  if (begin == end){
+int hoare_median(int *vector, int begin, int end, int median,
+                 PartitionMethod *partitionsMethods) {
+  if (begin == end) {
     return begin;
-  }else{
-    int pivot = hoare_default(vector, begin, end);
-    if(pivot - begin + 1 >= median) {
-      return hoare_median(vector,begin, pivot,median);
-    }
-    else{
-      return hoare_median(vector, pivot+1, end, median - (pivot - begin + 1));
+  } else {
+    int pivot = hoare_default(vector, begin, end, partitionsMethods);
+    if (pivot - begin + 1 >= median) {
+      return hoare_median(vector, begin, pivot, median, partitionsMethods);
+    } else {
+      return hoare_median(vector, pivot + 1, end, median - (pivot - begin + 1),
+                          partitionsMethods);
     }
   }
 }
 
-
-void quick_sort(int* vector, int begin, int end){
-  if(begin < end){
-    // int pivot = hoare_default(vector, begin, end);
-    int pivot = lomuto_median(vector, begin, end, (end - begin)/2);
-    quick_sort(vector,begin,pivot);
-    quick_sort(vector,pivot+1,end);
+void quick_sort_hoare_median(int *vector, int begin, int end,
+                             PartitionMethod *partitionsMethods) {
+  if (begin < end) {
+    int pivot =
+        hoare_median(vector, begin, end, (end - begin) / 2, partitionsMethods);
+    quick_sort_hoare_median(vector, begin, pivot, partitionsMethods);
+    quick_sort_hoare_median(vector, pivot + 1, end, partitionsMethods);
   }
 }
 
-int* generateVector(int size){
+void quick_sort_hoare_default(int *vector, int begin, int end,
+                              PartitionMethod *partitionsMethods) {
+  if (begin < end) {
+    int pivot = hoare_default(vector, begin, end, partitionsMethods);
+    quick_sort_hoare_default(vector, begin, pivot, partitionsMethods);
+    quick_sort_hoare_default(vector, pivot + 1, end, partitionsMethods);
+  }
+}
+
+// void quick_sort(int *vector, int begin, int end) {
+//   if (begin < end) {
+//     // int pivot = hoare_default(vector, begin, end);
+//     int pivot = lomuto_median(vector, begin, end, (end - begin) / 2);
+//     quick_sort(vector, begin, pivot);
+//     quick_sort(vector, pivot + 1, end);
+//   }
+// }
+
+void initPartitionMethods(PartitionMethod *partitionsMethods) {
+  char *methods[6] = {"HP", "HA", "HM", "LP", "LA", "LM"};
+  for (int i = 0; i < 6; i++) {
+    partitionsMethods[i].method = methods[i];
+    partitionsMethods[i].count = 0;
+  }
+}
+
+int *generateVector(int size) {
   srand(time(NULL));
-  int* vector = malloc(size*sizeof(int));
-  for(int i = 0; i < size; i++){
+  int *vector = malloc(size * sizeof(int));
+  for (int i = 0; i < size; i++) {
     vector[i] = rand() % 100;
   }
   return vector;
 }
 
-
-int main(int argc, char *argv[])
-{
-  char* file_out_path = argv[2];
-  printf("%s\n",file_out_path);
-  char* file_input_path = argv[1];
-  printf("%s\n",file_input_path);
+int main(int argc, char *argv[]) {
+  char *file_out_path = argv[2];
+  printf("%s\n", file_out_path);
+  char *file_input_path = argv[1];
+  printf("%s\n", file_input_path);
   input_file = fopen(file_input_path, "r");
   output_file = fopen(file_out_path, "w+");
 
   int quantity = 0;
-  int size = 0;
-  fscanf(input_file,"%d",&quantity);
-  for(int i = 0; i < quantity; i++){
-    fscanf(input_file,"%d", &size);
-    int* vector = malloc(size*sizeof(int));
-    for(int j = 0; j<size;j++){
-      fscanf(input_file,"%d", &vector[j]);
+  fscanf(input_file, "%d", &quantity);
+  int **vectors = malloc(quantity * sizeof(int *));
+  int *sizes = malloc(quantity + sizeof(int));
+  for (int i = 0; i < quantity; i++) {
+    fscanf(input_file, "%d", &sizes[i]);
+    vectors[i] = malloc(sizes[i] * sizeof(int));
+    for (int j = 0; j < sizes[i]; j++) {
+      fscanf(input_file, "%d", &vectors[i][j]);
     }
-    free(vector);
   }
-  
+
+  for (int i = 0; i < quantity; i++) {
+    for (int j = 0; j < sizes[i]; j++) {
+      printf("%d ", vectors[i][j]);
+    }
+    printf("\n");
+  }
+
+  PartitionMethod *partitionsMethods = malloc(6 * sizeof(PartitionMethod));
+  initPartitionMethods(partitionsMethods);
+
+  for (int i = 0; i < quantity; i++) {
+    int *copy_HP = malloc(sizes[i] * sizeof(int));
+    int *copy_HA = malloc(sizes[i] * sizeof(int));
+    int *copy_HM = malloc(sizes[i] * sizeof(int));
+    int *copy_LP = malloc(sizes[i] * sizeof(int));
+    int *copy_LA = malloc(sizes[i] * sizeof(int));
+    int *copy_LM = malloc(sizes[i] * sizeof(int));
+    for (int j = 0; j < sizes[i]; j++) {
+      copy_HP[j] = vectors[i][j];
+      copy_HA[j] = vectors[i][j];
+      copy_HM[j] = vectors[i][j];
+      copy_LP[j] = vectors[i][j];
+      copy_LA[j] = vectors[i][j];
+    }
+    quick_sort_hoare_default(copy_HP, 0, sizes[i], &partitionsMethods[0]);
+    quick_sort_hoare_rand(copy_HA, 0, sizes[i], &partitionsMethods[1]);
+    quick_sort_hoare_default(copy_HM, 0, sizes[i], &partitionsMethods[1]);
+  }
   fclose(output_file);
   fclose(input_file);
   return 0;
