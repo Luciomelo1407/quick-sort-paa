@@ -27,6 +27,7 @@ int lomuto_default(int *vector, int begin, int end, PartitionMethod* partitionsM
 
   for (int y = begin; y < end; y++) {
     if (vector[y] <= pivot) {
+      partitionsMethods->count++;
       x++;
       swap = vector[x];
       vector[x] = vector[y];
@@ -34,6 +35,7 @@ int lomuto_default(int *vector, int begin, int end, PartitionMethod* partitionsM
     }
   }
 
+  // partitionsMethods->count++;
   swap = vector[x + 1];
   vector[x + 1] = vector[end];
   vector[end] = swap;
@@ -99,6 +101,7 @@ int hoare_default(int *vector, int begin, int end,
     while (vector[++x] < pivot) {
     }
     if (x < y) {
+      partitionsMethods->count++;
       swap = vector[x];
       vector[x] = vector[y];
       vector[y] = swap;
@@ -110,7 +113,8 @@ int hoare_default(int *vector, int begin, int end,
 
 int hoare_rand(int *vector, int begin, int end,
                PartitionMethod *partitionsMethods) {
-  int swap = vector[begin], r_index = begin + rand() % (end - begin + 1);
+  partitionsMethods->count++;
+  int swap = vector[begin], r_index = begin + vector[begin] % (end - begin + 1);
   vector[begin] = vector[r_index];
   vector[r_index] = swap;
   return hoare_default(vector, begin, end, partitionsMethods);
@@ -127,7 +131,6 @@ void quick_sort_hoare_rand(int *vector, int begin, int end,
 
 int hoare_median(int *vector, int begin, int end, int median,
                  PartitionMethod *partitionsMethods) {
-  partitionsMethods->count++;
   if (begin == end) {
     return begin;
   } else {
@@ -242,9 +245,9 @@ int main(int argc, char *argv[]) {
   }
 
   PartitionMethod *partitionsMethods = malloc(6 * sizeof(PartitionMethod));
-  initPartitionMethods(partitionsMethods);
 
   for (int i = 0; i < quantity; i++) {
+    initPartitionMethods(partitionsMethods);
     int *copy_HP = malloc(sizes[i] * sizeof(int));
     int *copy_HA = malloc(sizes[i] * sizeof(int));
     int *copy_HM = malloc(sizes[i] * sizeof(int));
