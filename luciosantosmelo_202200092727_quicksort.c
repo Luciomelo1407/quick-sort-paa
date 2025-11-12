@@ -59,8 +59,11 @@ void quick_sort_lomuto_default(int *vector, int begin, int end,
   }
 }
 
-void lomuto_median(int *vector, int begin, int end,
-                   PartitionMethod *partitionsMethods) {
+void lomuto_median(
+    int *vector, int begin, int end,
+    PartitionMethod
+        *partitionsMethods) { // WARN: provavelmente o problema está nesse
+                              // malloc Alocando mem sem necessidade
   int n = (end - begin) + 1;
   int idx1 = begin + (n / 4);
   int idx2 = begin + (n / 2);
@@ -280,9 +283,7 @@ void ordenacaomacaca(PartitionMethod *vector) {
 
 int main(int argc, char *argv[]) {
   char *file_out_path = argv[2];
-  printf("%s\n", file_out_path);
   char *file_input_path = argv[1];
-  printf("%s\n", file_input_path);
   input_file = fopen(file_input_path, "r");
   output_file = fopen(file_out_path, "w+");
 
@@ -296,13 +297,6 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < sizes[i]; j++) {
       fscanf(input_file, "%d", &vectors[i][j]);
     }
-  }
-
-  for (int i = 0; i < quantity; i++) {
-    for (int j = 0; j < sizes[i]; j++) {
-      printf("%d ", vectors[i][j]);
-    }
-    printf("\n");
   }
 
   PartitionMethod *partitionsMethods = malloc(6 * sizeof(PartitionMethod));
